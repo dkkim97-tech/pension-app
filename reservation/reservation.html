@@ -312,51 +312,83 @@
     // ===== COMPONENTS =====
 
     // --- Header ---
-    const Header = ({ step, onOpenEventModal, onOpenWeatherModal, onOpenStatusModal }) => {
+    const Header = ({ title, showHome, onHome, step, subTitle }) => {
+      // Steps for Reservation flow
       const steps = ['period', 'time', 'form'];
+
       return (
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white text-center relative shadow-lg">
-          <div className="flex justify-between items-start mb-2">
-            <h1 className="text-xl font-bold tracking-tight">🏡 공간/펜션 예약</h1>
-            <div className="flex gap-1.5 flex-wrap justify-end">
-              <button onClick={onOpenEventModal} className="bg-pink-500 hover:bg-pink-400 text-white text-[10px] px-2 py-1.5 rounded-full flex items-center gap-1 transition shadow-sm ring-1 ring-pink-400">
-                <CalendarHeart className="w-3 h-3" /> 가족 행사
+          <div className="flex justify-between items-center mb-2">
+            {showHome && (
+              <button onClick={onHome} className="bg-white/20 hover:bg-white/30 p-2 rounded-full transition">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
               </button>
-              <button onClick={onOpenWeatherModal} className="bg-cyan-500 hover:bg-cyan-400 text-white text-[10px] px-2 py-1.5 rounded-full flex items-center gap-1 transition shadow-sm ring-1 ring-cyan-400">
-                <Waves className="w-3 h-3" /> 바다 날씨
-              </button>
-              <button onClick={onOpenStatusModal} className="bg-blue-800 hover:bg-blue-900 text-white text-[10px] px-2 py-1.5 rounded-full flex items-center gap-1 transition shadow-sm">
-                <ClipboardList className="w-3 h-3" /> 예약 대장
-              </button>
+            )}
+            <h1 className="text-xl font-bold tracking-tight flex-1">{title}</h1>
+            {showHome && <div className="w-9" />} {/* Spacer for centering */}
+          </div>
+
+          {subTitle && <p className="text-blue-100 text-sm mt-1">{subTitle}</p>}
+
+          {/* Progress Bar for Reservation Flow */}
+          {step && step !== 'success' && (
+            <div className="flex justify-center mt-4 space-x-2">
+              {steps.map((s, idx) => (
+                <div key={s} className={`h-1.5 w-8 rounded-full transition-colors ${['period', 'time', 'form', 'success'].indexOf(step) >= idx ? 'bg-white' : 'bg-blue-800'
+                  }`} />
+              ))}
             </div>
-          </div>
-          <p className="text-blue-100 text-sm mt-1">
-            {step === 'date' ? '날짜를 선택하여 예약을 시작하세요.' :
-              step === 'period' ? '예약하실 기간을 확인해주세요.' :
-                step === 'time' ? '체크인/체크아웃 시간을 선택해주세요.' :
-                  step === 'form' ? '예약자 정보를 입력해주세요.' : '예약이 완료되었습니다!'}
-          </p>
-          <div className="flex justify-center mt-4 space-x-2">
-            {steps.map((s, idx) => (
-              <div key={s} className={`h-1.5 w-8 rounded-full transition-colors ${['period', 'time', 'form', 'success'].indexOf(step) >= idx ? 'bg-white' : 'bg-blue-800'
-                }`} />
-            ))}
-          </div>
+          )}
+        </div>
+      );
+    };
+
+    // --- MainNavigation ---
+    const MainNavigation = ({ currentView, onNavigate }) => {
+      const navItems = [
+        { id: 'EVENTS', label: '가족행사', icon: CalendarHeart, color: 'text-pink-500', bg: 'bg-pink-50', border: 'border-pink-200' },
+        { id: 'WEATHER', label: '바다날씨', icon: Waves, color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'border-cyan-200' },
+        { id: 'CALENDAR', label: '펜션예약', icon: CheckCircle2, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+        { id: 'LEDGER', label: '예약대장', icon: ClipboardList, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200' },
+      ];
+
+      return (
+        <div className="grid grid-cols-4 gap-2 p-2 bg-white border-b border-gray-200 shadow-sm">
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className={`flex flex-col items-center justify-center p-2 rounded-xl border transition ${currentView === item.id
+                ? `${item.bg} ${item.border} ring-1 ring-offset-1 ${item.color.replace('text', 'ring')}`
+                : 'bg-white border-transparent hover:bg-gray-50 text-gray-400'
+                }`}
+            >
+              <item.icon className={`w-5 h-5 mb-1 ${currentView === item.id ? item.color : 'text-gray-400'}`} />
+              <span className={`text-[10px] font-bold ${currentView === item.id ? 'text-gray-800' : 'text-gray-400'}`}>{item.label}</span>
+            </button>
+          ))}
         </div>
       );
     };
 
     // --- SuccessView ---
-    const SuccessView = ({ onReset }) => (
+    const SuccessView = ({ onReset, onHome }) => (
       <div className="text-center py-10 animate-scaleIn flex flex-col items-center justify-center h-full px-6">
         <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
           <CheckCircle2 className="w-12 h-12 text-green-600" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">예약 신청 완료!</h2>
         <p className="text-gray-500 mb-8">예약이 정상적으로 접수되었습니다.<br />확인 후 문자로 안내해 드리겠습니다.</p>
-        <button onClick={onReset} className="w-full max-w-xs border border-gray-300 text-gray-700 p-3 rounded-xl font-bold hover:bg-gray-50 transition">
-          첫 화면으로
-        </button>
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <button onClick={onHome} className="w-full bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-md">
+            첫 화면으로
+          </button>
+          <button onClick={onReset} className="w-full border border-gray-300 text-gray-700 p-3 rounded-xl font-bold hover:bg-gray-50 transition">
+            추가 예약하기
+          </button>
+        </div>
       </div>
     );
 
@@ -380,17 +412,22 @@
       );
     };
 
-    // --- EventModal ---
-    const EventModal = ({ isOpen, onClose, events }) => {
-      if (!isOpen) return null;
+    // --- EventsView (Formerly EventModal) ---
+    const EventsView = ({ events, onAddEvent }) => {
       return (
-        <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/50 animate-fadeIn" onClick={onClose}>
-          <div className="bg-white w-full max-h-[80%] rounded-t-2xl shadow-xl animate-slideUp overflow-auto" onClick={e => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900">📅 가족 행사</h3>
-              <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full"><X className="w-5 h-5 text-gray-500" /></button>
+        <div className="p-4 space-y-4 animate-slideUp pb-20">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-bold text-gray-900">등록된 가족 행사</h3>
+            <button onClick={onAddEvent} className="bg-pink-500 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-pink-600 transition shadow-sm">
+              + 행사 추가
+            </button>
+          </div>
+          {events.length === 0 ? (
+            <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+              등록된 행사가 없습니다.
             </div>
-            <div className="p-4 space-y-3">
+          ) : (
+            <div className="space-y-3">
               {events.map(ev => (
                 <div key={ev.id} className="bg-pink-50 border border-pink-100 rounded-xl p-4">
                   <div className="flex justify-between items-start">
@@ -404,97 +441,124 @@
                 </div>
               ))}
             </div>
-          </div>
+          )}
         </div>
       );
     };
 
-    // --- WeatherModal ---
-    const WeatherModal = ({ isOpen, onClose, targetMonth, targetYear }) => {
-      if (!isOpen) return null;
+    // --- WeatherView (Formerly WeatherModal) ---
+    const WeatherView = ({ targetMonth, targetYear, onPrevMonth, onNextMonth }) => {
       const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+      const firstDayOfMonth = new Date(targetYear, targetMonth, 1).getDay();
       const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-      const WeatherIcon = ({ type }) => {
-        if (type === 'sunny') return <Sun className="w-5 h-5 text-amber-500" />;
-        if (type === 'cloudy') return <Cloud className="w-5 h-5 text-gray-400" />;
-        return <CloudRain className="w-5 h-5 text-blue-400" />;
-      };
-      return (
-        <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/50 animate-fadeIn" onClick={onClose}>
-          <div className="bg-white w-full max-h-[80%] rounded-t-2xl shadow-xl animate-slideUp overflow-auto" onClick={e => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900">🌊 {targetYear}년 {targetMonth + 1}월 바다 날씨</h3>
-              <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full"><X className="w-5 h-5 text-gray-500" /></button>
-            </div>
-            <div className="p-4">
-              <div className="grid grid-cols-1 gap-2">
-                {days.map(day => {
-                  const w = generateWeatherData(day, targetMonth);
-                  return (
-                    <div key={day} className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2 text-sm">
-                      <span className="font-bold text-gray-700 w-8">{day}일</span>
-                      <WeatherIcon type={w.weather} />
-                      <span className="text-cyan-600 font-medium">{w.tide}</span>
-                      <span className="text-gray-400 text-xs">만조 {w.high}</span>
-                      <span className="text-gray-400 text-xs">간조 {w.low}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    };
+      const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
 
-    // --- StatusModal ---
-    const StatusModal = ({ isOpen, onClose, bookings, onDelete }) => {
-      const [confirmTarget, setConfirmTarget] = useState(null);
-      if (!isOpen) return null;
+      const WeatherIcon = ({ type }) => {
+        if (type === 'sunny') return <Sun className="w-5 h-5 text-amber-500 mx-auto" />;
+        if (type === 'cloudy') return <Cloud className="w-5 h-5 text-gray-400 mx-auto" />;
+        return <CloudRain className="w-5 h-5 text-blue-400 mx-auto" />;
+      };
+
       return (
-        <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/50 animate-fadeIn" onClick={onClose}>
-          <div className="bg-white w-full max-h-[80%] rounded-t-2xl shadow-xl animate-slideUp overflow-auto" onClick={e => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900">📋 예약 대장</h3>
-              <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full"><X className="w-5 h-5 text-gray-500" /></button>
-            </div>
-            <div className="p-4 space-y-3">
-              {bookings.length === 0 ? (
-                <p className="text-center text-gray-400 py-8">등록된 예약이 없습니다.</p>
-              ) : bookings.map(b => (
-                <div key={b.id} className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                        <User className="w-4 h-4 text-blue-500" /> {b.name}
-                      </h4>
-                      <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-                        <Phone className="w-3 h-3" /> {b.phone}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {formatDate(b.start)}{b.start.getTime() !== b.end.getTime() ? ` ~ ${formatDate(b.end)}` : ''}
-                        <span className="text-blue-500 ml-1">({calculateDuration(b.start, b.end)})</span>
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {formatAmPm(b.timeStart)} ~ {formatAmPm(b.timeEnd)}
-                      </p>
+        <div className="p-4 animate-slideUp pb-20">
+          <div className="flex justify-between items-center px-2 py-3 mb-2 bg-cyan-50 rounded-xl">
+            <button onClick={onPrevMonth} className="p-2 hover:bg-white rounded-full transition"><ChevronLeft className="w-5 h-5 text-cyan-700" /></button>
+            <h2 className="text-lg font-bold text-cyan-900">{targetYear}년 {targetMonth + 1}월</h2>
+            <button onClick={onNextMonth} className="p-2 hover:bg-white rounded-full transition"><ChevronRight className="w-5 h-5 text-cyan-700" /></button>
+          </div>
+
+          <div className="grid grid-cols-7 text-center text-xs font-medium pb-2 border-b border-gray-100 mb-2">
+            {daysOfWeek.map((d, i) => (
+              <div key={d} className={`py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>{d}</div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`} />)}
+            {days.map(day => {
+              const w = generateWeatherData(day, targetMonth);
+              return (
+                <div key={day} className="flex flex-col items-center bg-white border border-gray-100 rounded-lg py-2 min-h-[80px] shadow-sm">
+                  <span className="font-bold text-gray-700 text-sm mb-1">{day}</span>
+                  <div className="flex-1 flex flex-col justify-center gap-1 w-full">
+                    <WeatherIcon type={w.weather} />
+                    <span className="text-cyan-600 font-bold text-[10px]">{w.tide}</span>
+                    <div className="text-[9px] text-gray-400 leading-tight">
+                      <div>🔺{w.high}</div>
+                      <div>🔻{w.low}</div>
                     </div>
-                    <button onClick={() => setConfirmTarget(b.id)} className="text-red-400 hover:text-red-600 p-1">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-            <ConfirmModal
-              isOpen={confirmTarget !== null}
-              title="예약 삭제"
-              message="이 예약을 삭제하시겠습니까?"
-              isDanger={true}
-              onConfirm={() => { onDelete(confirmTarget); setConfirmTarget(null); }}
-              onCancel={() => setConfirmTarget(null)}
-            />
+              );
+            })}
           </div>
+        </div>
+      );
+    };
+
+    // --- LedgerView (Formerly StatusModal) ---
+    // Will be updated to Table format in next step
+    const LedgerView = ({ bookings, onDelete, onDateClick }) => {
+      const [confirmTarget, setConfirmTarget] = useState(null);
+
+      // Sort bookings: descendng start date (newest first)
+      const sortedBookings = [...bookings].sort((a, b) => b.start - a.start);
+
+      return (
+        <div className="p-4 space-y-3 animate-slideUp pb-20">
+          {sortedBookings.length === 0 ? (
+            <p className="text-center text-gray-400 py-8">등록된 예약이 없습니다.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+              <table className="w-full text-sm text-left text-gray-600">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-3">예약자</th>
+                    <th className="px-4 py-3">연락처</th>
+                    <th className="px-4 py-3">일정</th>
+                    <th className="px-4 py-3 text-center">관리</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedBookings.map(b => (
+                    <tr
+                      key={b.id}
+                      onClick={() => onDateClick(b.start)}
+                      className="bg-white border-b hover:bg-gray-50 cursor-pointer transition select-none"
+                    >
+                      <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                        <div className="flex items-center gap-1"><User className="w-3 h-3 text-blue-500" />{b.name}</div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1"><Phone className="w-3 h-3 text-gray-400" />{b.phone}</div>
+                      </td>
+                      <td className="px-4 py-3 min-w-[140px]">
+                        <div className="font-bold text-gray-800">{formatDate(b.start)}</div>
+                        {b.start.getTime() !== b.end.getTime() && <div className="text-xs text-gray-500">~ {formatDate(b.end)}</div>}
+                        <div className="text-xs text-blue-500 mt-0.5">{calculateDuration(b.start, b.end)}</div>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setConfirmTarget(b.id); }}
+                          className="text-red-400 hover:text-red-600 p-2 bg-red-50 hover:bg-red-100 rounded-full transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <ConfirmModal
+            isOpen={confirmTarget !== null}
+            title="예약 삭제"
+            message="이 예약을 삭제하시겠습니까?"
+            isDanger={true}
+            onConfirm={() => { onDelete(confirmTarget); setConfirmTarget(null); }}
+            onCancel={() => setConfirmTarget(null)}
+          />
         </div>
       );
     };
@@ -677,9 +741,34 @@
       </div>
     );
 
+    // --- EventForm ---
+    const EventForm = ({ name, note, onNameChange, onNoteChange, onBack, onSubmit }) => (
+      <div className="p-6 animate-slideUp">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">🎉 새 가족 행사 등록</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm text-gray-500 mb-1 block">행사명</label>
+            <input type="text" value={name} onChange={e => onNameChange(e.target.value)} placeholder="예: 할머니 생신" className="w-full border border-gray-200 rounded-xl p-3 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none" />
+          </div>
+          <div>
+            <label className="text-sm text-gray-500 mb-1 block">메모 (선택)</label>
+            <input type="text" value={note} onChange={e => onNoteChange(e.target.value)} placeholder="저녁 식사 예정" className="w-full border border-gray-200 rounded-xl p-3 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none" />
+          </div>
+        </div>
+        <div className="flex gap-3 mt-6">
+          <button onClick={onBack} className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">뒤로</button>
+          <button onClick={onSubmit} disabled={!name} className={`flex-1 py-3 text-white font-bold rounded-xl transition shadow-md ${name ? 'bg-pink-500 hover:bg-pink-600' : 'bg-gray-300 cursor-not-allowed'}`}>등록하기</button>
+        </div>
+      </div>
+    );
+
     // ===== MAIN APP =====
     const App = () => {
-      const [step, setStep] = useState('date'); // date, period, time, form, success
+      // Views: CALENDAR (Home), WEATHER, LEDGER, EVENTS, EVENT_ADD
+      const [view, setView] = useState('CALENDAR');
+
+      // Calendar & Reservation State
+      const [step, setStep] = useState('date');
       const [targetMonth, setTargetMonth] = useState(today.getMonth());
       const [targetYear, setTargetYear] = useState(today.getFullYear());
       const [selectedStart, setSelectedStart] = useState(null);
@@ -689,39 +778,56 @@
       const [guestName, setGuestName] = useState('');
       const [guestPhone, setGuestPhone] = useState('');
 
-      // Load bookings from localStorage
+      // Event Add State
+      const [eventName, setEventName] = useState('');
+      const [eventNote, setEventNote] = useState('');
+
+      // Data State
       const [bookings, setBookings] = useState(() => {
         try {
           const saved = localStorage.getItem('pension_bookings');
           if (saved) {
-            return JSON.parse(saved).map(b => ({
-              ...b,
-              start: new Date(b.start),
-              end: new Date(b.end)
-            }));
+            return JSON.parse(saved).map(b => ({ ...b, start: new Date(b.start), end: new Date(b.end) }));
           }
-        } catch (e) {
-          console.error("Failed to load bookings", e);
-        }
+        } catch (e) { console.error(e); }
         return INITIAL_BOOKINGS;
       });
 
-      // Save bookings to localStorage whenever they change
-      useEffect(() => {
-        localStorage.setItem('pension_bookings', JSON.stringify(bookings));
-      }, [bookings]);
+      const [familyEvents, setFamilyEvents] = useState(() => {
+        try {
+          const saved = localStorage.getItem('family_events');
+          if (saved) return JSON.parse(saved);
+        } catch (e) { console.error(e); }
+        return INITIAL_FAMILY_EVENTS;
+      });
 
-      const [familyEvents] = useState(INITIAL_FAMILY_EVENTS);
+      // Persistence
+      useEffect(() => { localStorage.setItem('pension_bookings', JSON.stringify(bookings)); }, [bookings]);
+      useEffect(() => { localStorage.setItem('family_events', JSON.stringify(familyEvents)); }, [familyEvents]);
 
-      // Modals
-      const [showEventModal, setShowEventModal] = useState(false);
-      const [showWeatherModal, setShowWeatherModal] = useState(false);
-      const [showStatusModal, setShowStatusModal] = useState(false);
+      // Navigation Handlers
+      const handleHome = () => {
+        setView('CALENDAR');
+        setStep('date');
+        resetSelection();
+      };
+
+      const resetSelection = () => {
+        setSelectedStart(null);
+        setSelectedEnd(null);
+        setTimeStart('15:00');
+        setTimeEnd('11:00');
+        setGuestName('');
+        setGuestPhone('');
+        setEventName('');
+        setEventNote('');
+      };
 
       const handlePrevMonth = () => {
         if (targetMonth === 0) { setTargetMonth(11); setTargetYear(y => y - 1); }
         else setTargetMonth(m => m - 1);
       };
+
       const handleNextMonth = () => {
         if (targetMonth === 11) { setTargetMonth(0); setTargetYear(y => y + 1); }
         else setTargetMonth(m => m + 1);
@@ -738,7 +844,8 @@
           } else {
             setSelectedEnd(date);
           }
-          setStep('period');
+          if (view === 'CALENDAR') setStep('period');
+          // If EVENT_ADD, stay on calendar or auto-advance? Let's just update selection.
         }
       };
 
@@ -756,82 +863,175 @@
         setStep('success');
       };
 
+      const handleEventSubmit = () => {
+        const newEvent = {
+          id: Date.now(),
+          name: eventName,
+          startDate: formatDate(selectedStart),
+          endDate: formatDate(selectedEnd || selectedStart),
+          note: eventNote
+        };
+        setFamilyEvents(prev => [...prev, newEvent].sort((a, b) => a.startDate.localeCompare(b.startDate)));
+        setView('EVENTS');
+        resetSelection();
+      };
+
       const handleReset = () => {
         setStep('date');
-        setSelectedStart(null);
-        setSelectedEnd(null);
-        setTimeStart('15:00');
-        setTimeEnd('11:00');
-        setGuestName('');
-        setGuestPhone('');
+        resetSelection();
       };
 
       const handleDeleteBooking = (id) => {
         setBookings(prev => prev.filter(b => b.id !== id));
       };
 
+      const handleDeleteEvent = (id) => { // Optional: for future use
+        setFamilyEvents(prev => prev.filter(e => e.id !== id));
+      };
+
+      const handleLedgerDateClick = (date) => {
+        setTargetYear(date.getFullYear());
+        setTargetMonth(date.getMonth());
+        setView('CALENDAR');
+      };
+
+      // Header Props Calculation
+      let headerTitle = "🏡 공간/펜션 예약";
+      let headerSub = "";
+      if (view === 'EVENTS') headerTitle = "📅 가족 행사";
+      if (view === 'EVENT_ADD') headerTitle = "📅 새 가족 행사 등록";
+      if (view === 'WEATHER') headerTitle = "🌊 바다 날씨";
+      if (view === 'LEDGER') headerTitle = "📋 예약 대장";
+      if (view === 'CALENDAR') {
+        if (step === 'date') headerSub = "날짜를 선택하여 예약을 시작하세요.";
+        else if (step === 'period') headerSub = "예약하실 기간을 확인해주세요.";
+        else if (step === 'time') headerSub = "체크인/체크아웃 시간을 선택해주세요.";
+        else if (step === 'form') headerSub = "예약자 정보를 입력해주세요.";
+        else headerSub = "예약이 완료되었습니다!";
+      }
+
       return (
-        <div className="max-w-md mx-auto bg-white min-h-screen relative shadow-2xl">
+        <div className="max-w-md mx-auto bg-white min-h-screen relative shadow-2xl flex flex-col">
           <Header
-            step={step}
-            onOpenEventModal={() => setShowEventModal(true)}
-            onOpenWeatherModal={() => setShowWeatherModal(true)}
-            onOpenStatusModal={() => setShowStatusModal(true)}
+            title={headerTitle}
+            subTitle={headerSub}
+            showHome={false}
+            onHome={handleHome}
+            step={view === 'CALENDAR' ? step : null}
           />
 
-          <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 140px)' }}>
-            {step === 'date' && (
-              <MonthCalendar
+          <MainNavigation currentView={view} onNavigate={(v) => {
+            setView(v);
+            if (v === 'CALENDAR') {
+              setStep('date');
+              resetSelection();
+            }
+          }} />
+
+          <div className="flex-1 overflow-auto bg-white">
+            {view === 'EVENTS' && (
+              <EventsView
+                events={familyEvents}
+                onAddEvent={() => { setView('EVENT_ADD'); resetSelection(); }}
+              />
+            )}
+
+            {view === 'EVENT_ADD' && (
+              <>
+                {!selectedStart ? (
+                  <div className="animate-fadeIn">
+                    <div className="bg-pink-50 p-3 text-center text-sm text-pink-600 font-bold">
+                      행사 날짜를 선택해주세요.
+                    </div>
+                    <MonthCalendar
+                      targetMonth={targetMonth}
+                      targetYear={targetYear}
+                      onPrevMonth={handlePrevMonth}
+                      onNextMonth={handleNextMonth}
+                      onSelectDate={handleSelectDate}
+                      selectedStart={selectedStart}
+                      selectedEnd={selectedEnd}
+                      bookings={bookings}
+                      familyEvents={familyEvents}
+                    />
+                  </div>
+                ) : (
+                  <EventForm
+                    name={eventName}
+                    note={eventNote}
+                    onNameChange={setEventName}
+                    onNoteChange={setEventNote}
+                    onBack={() => resetSelection()}
+                    onSubmit={handleEventSubmit}
+                  />
+                )}
+              </>
+            )}
+
+            {view === 'WEATHER' && (
+              <WeatherView
                 targetMonth={targetMonth}
                 targetYear={targetYear}
                 onPrevMonth={handlePrevMonth}
                 onNextMonth={handleNextMonth}
-                onSelectDate={handleSelectDate}
-                selectedStart={selectedStart}
-                selectedEnd={selectedEnd}
+              />
+            )}
+
+            {view === 'LEDGER' && (
+              <LedgerView
                 bookings={bookings}
-                familyEvents={familyEvents}
+                onDelete={handleDeleteBooking}
+                onDateClick={handleLedgerDateClick}
               />
             )}
 
-            {step === 'period' && (
-              <PeriodSelector
-                selectedStart={selectedStart}
-                selectedEnd={selectedEnd}
-                onBack={() => setStep('date')}
-                onNext={() => setStep('time')}
-              />
+            {view === 'CALENDAR' && (
+              <>
+                {step === 'date' && (
+                  <MonthCalendar
+                    targetMonth={targetMonth}
+                    targetYear={targetYear}
+                    onPrevMonth={handlePrevMonth}
+                    onNextMonth={handleNextMonth}
+                    onSelectDate={handleSelectDate}
+                    selectedStart={selectedStart}
+                    selectedEnd={selectedEnd}
+                    bookings={bookings}
+                    familyEvents={familyEvents}
+                  />
+                )}
+                {step === 'period' && (
+                  <PeriodSelector
+                    selectedStart={selectedStart}
+                    selectedEnd={selectedEnd}
+                    onBack={() => setStep('date')}
+                    onNext={() => setStep('time')}
+                  />
+                )}
+                {step === 'time' && (
+                  <TimeSelector
+                    timeStart={timeStart}
+                    timeEnd={timeEnd}
+                    onTimeStartChange={setTimeStart}
+                    onTimeEndChange={setTimeEnd}
+                    onBack={() => setStep('period')}
+                    onNext={() => setStep('form')}
+                  />
+                )}
+                {step === 'form' && (
+                  <ReservationForm
+                    name={guestName}
+                    phone={guestPhone}
+                    onNameChange={setGuestName}
+                    onPhoneChange={setGuestPhone}
+                    onBack={() => setStep('time')}
+                    onSubmit={handleSubmit}
+                  />
+                )}
+                {step === 'success' && <SuccessView onReset={handleReset} onHome={handleHome} />}
+              </>
             )}
-
-            {step === 'time' && (
-              <TimeSelector
-                timeStart={timeStart}
-                timeEnd={timeEnd}
-                onTimeStartChange={setTimeStart}
-                onTimeEndChange={setTimeEnd}
-                onBack={() => setStep('period')}
-                onNext={() => setStep('form')}
-              />
-            )}
-
-            {step === 'form' && (
-              <ReservationForm
-                name={guestName}
-                phone={guestPhone}
-                onNameChange={setGuestName}
-                onPhoneChange={setGuestPhone}
-                onBack={() => setStep('time')}
-                onSubmit={handleSubmit}
-              />
-            )}
-
-            {step === 'success' && <SuccessView onReset={handleReset} />}
           </div>
-
-          {/* Modals */}
-          <EventModal isOpen={showEventModal} onClose={() => setShowEventModal(false)} events={familyEvents} />
-          <WeatherModal isOpen={showWeatherModal} onClose={() => setShowWeatherModal(false)} targetMonth={targetMonth} targetYear={targetYear} />
-          <StatusModal isOpen={showStatusModal} onClose={() => setShowStatusModal(false)} bookings={bookings} onDelete={handleDeleteBooking} />
         </div>
       );
     };

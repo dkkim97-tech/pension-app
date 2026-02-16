@@ -413,7 +413,9 @@
     };
 
     // --- EventsView (Formerly EventModal) ---
-    const EventsView = ({ events, onAddEvent }) => {
+    const EventsView = ({ events, onAddEvent, onDelete }) => {
+      const [confirmTarget, setConfirmTarget] = useState(null);
+
       return (
         <div className="p-4 space-y-4 animate-slideUp pb-20">
           <div className="flex justify-between items-center mb-2">
@@ -429,19 +431,35 @@
           ) : (
             <div className="space-y-3">
               {events.map(ev => (
-                <div key={ev.id} className="bg-pink-50 border border-pink-100 rounded-xl p-4">
+                <div key={ev.id} className="bg-pink-50 border border-pink-100 rounded-xl p-4 transition hover:bg-pink-100">
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="font-bold text-gray-900">{ev.name}</h4>
                       <p className="text-sm text-gray-500 mt-1">{ev.startDate}{ev.startDate !== ev.endDate ? ` ~ ${ev.endDate}` : ''}</p>
                       <p className="text-xs text-pink-500 mt-1">{getLunarFromDateString(ev.startDate)}</p>
                     </div>
-                    {ev.note && <span className="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">{ev.note}</span>}
+                    <div className="flex flex-col items-end gap-2">
+                      {ev.note && <span className="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">{ev.note}</span>}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setConfirmTarget(ev.id); }}
+                        className="text-gray-400 hover:text-red-500 p-1.5 hover:bg-white rounded-full transition"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
+          <ConfirmModal
+            isOpen={confirmTarget !== null}
+            title="행사 삭제"
+            message="이 행사를 삭제하시겠습니까?"
+            isDanger={true}
+            onConfirm={() => { onDelete(confirmTarget); setConfirmTarget(null); }}
+            onCancel={() => setConfirmTarget(null)}
+          />
         </div>
       );
     };
@@ -687,7 +705,6 @@
         </div>
       </div>
     );
-    };
 
     // --- TimeSelector ---
     const TimeSelector = ({ timeStart, timeEnd, onTimeStartChange, onTimeEndChange, onBack, onNext }) => {
@@ -935,6 +952,7 @@
               <EventsView
                 events={familyEvents}
                 onAddEvent={() => { setView('EVENT_ADD'); resetSelection(); }}
+                onDelete={handleDeleteEvent}
               />
             )}
 

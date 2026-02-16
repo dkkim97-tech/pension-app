@@ -687,6 +687,7 @@
         </div>
       </div>
     );
+    };
 
     // --- TimeSelector ---
     const TimeSelector = ({ timeStart, timeEnd, onTimeStartChange, onTimeEndChange, onBack, onNext }) => {
@@ -915,8 +916,9 @@
           <Header
             title={headerTitle}
             subTitle={headerSub}
-            showHome={false}
+            showHome={view !== 'CALENDAR' && view !== 'HOME'}
             onHome={handleHome}
+            onClose={() => window.history.back()}
             step={view === 'CALENDAR' ? step : null}
           />
 

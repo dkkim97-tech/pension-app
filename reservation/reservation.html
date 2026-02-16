@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>공간/펜션 예약</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background: #f0f4f8;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .animate-slideUp {
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .animate-scaleIn {
+      animation: scaleIn 0.4s ease-out;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useCallback, useEffect } = React;
+
+    // ===== ICONS (SVG inline) =====
+    const CalendarHeart = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 10V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h7" />
+        <path d="M16 2v4" /><path d="M8 2v4" /><path d="M3 10h18" />
+        <path d="M21.29 14.7a2.43 2.43 0 0 0-2.65-.52c-.3.12-.57.3-.8.53l-.34.34-.35-.34a2.43 2.43 0 0 0-2.65-.53c-.3.12-.56.3-.79.53-.95.94-1 2.53.2 3.74L17.5 22l3.6-3.55c1.2-1.21 1.14-2.8.19-3.74Z" />
+      </svg>
+    );
+    const Waves = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+        <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+        <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+      </svg>
+    );
+    const ClipboardList = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <path d="M12 11h4" /><path d="M12 16h4" /><path d="M8 11h.01" /><path d="M8 16h.01" />
+      </svg>
+    );
+    const CheckCircle2 = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" />
+      </svg>
+    );
+    const Trash2 = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+        <line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" />
+      </svg>
+    );
+    const ChevronLeft = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    );
+    const ChevronRight = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m9 18 6-6-6-6" />
+      </svg>
+    );
+    const X = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+      </svg>
+    );
+    const Sun = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />
+      </svg>
+    );
+    const Cloud = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+      </svg>
+    );
+    const CloudRain = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+        <path d="M16 14v6" /><path d="M8 14v6" /><path d="M12 16v6" />
+      </svg>
+    );
+    const User = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+      </svg>
+    );
+    const Phone = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+      </svg>
+    );
+    const Clock = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+      </svg>
+    );
+
+    // ===== UTILITIES =====
+    const LUNAR_DATA = [
+      { solar: '2024-12-01', lunarMonth: 11, lunarDay: 1 },
+      { solar: '2024-12-31', lunarMonth: 12, lunarDay: 1 },
+      { solar: '2025-01-29', lunarMonth: 1, lunarDay: 1 },
+      { solar: '2025-02-28', lunarMonth: 2, lunarDay: 1 },
+      { solar: '2025-03-29', lunarMonth: 3, lunarDay: 1 },
+      { solar: '2025-04-28', lunarMonth: 4, lunarDay: 1 },
+      { solar: '2025-05-27', lunarMonth: 5, lunarDay: 1 },
+      { solar: '2025-06-25', lunarMonth: 6, lunarDay: 1 },
+      { solar: '2025-07-25', lunarMonth: 6, lunarDay: 1, isLeap: true },
+      { solar: '2025-08-23', lunarMonth: 7, lunarDay: 1 },
+      { solar: '2025-09-22', lunarMonth: 8, lunarDay: 1 },
+      { solar: '2025-10-21', lunarMonth: 9, lunarDay: 1 },
+      { solar: '2025-11-20', lunarMonth: 10, lunarDay: 1 },
+      { solar: '2025-12-20', lunarMonth: 11, lunarDay: 1 },
+      { solar: '2026-01-19', lunarMonth: 12, lunarDay: 1 },
+      { solar: '2026-02-17', lunarMonth: 1, lunarDay: 1 },
+      { solar: '2026-03-19', lunarMonth: 2, lunarDay: 1 },
+      { solar: '2026-04-17', lunarMonth: 3, lunarDay: 1 },
+      { solar: '2026-05-17', lunarMonth: 4, lunarDay: 1 },
+      { solar: '2026-06-15', lunarMonth: 5, lunarDay: 1 },
+      { solar: '2026-07-15', lunarMonth: 6, lunarDay: 1 },
+      { solar: '2026-08-13', lunarMonth: 7, lunarDay: 1 },
+      { solar: '2026-09-11', lunarMonth: 8, lunarDay: 1 },
+      { solar: '2026-10-11', lunarMonth: 9, lunarDay: 1 },
+      { solar: '2026-11-09', lunarMonth: 10, lunarDay: 1 },
+      { solar: '2026-12-09', lunarMonth: 11, lunarDay: 1 },
+      { solar: '2027-01-08', lunarMonth: 12, lunarDay: 1 },
+    ];
+
+    const convertSolarToLunar = (dateObj) => {
+      const tYear = dateObj.getFullYear();
+      const tMonth = dateObj.getMonth();
+      const tDay = dateObj.getDate();
+      const targetDate = new Date(tYear, tMonth, tDay);
+      let bestMatch = LUNAR_DATA[0];
+      for (let i = 0; i < LUNAR_DATA.length; i++) {
+        const [sYear, sMonth, sDay] = LUNAR_DATA[i].solar.split('-').map(Number);
+        const itemDate = new Date(sYear, sMonth - 1, sDay);
+        if (itemDate <= targetDate) { bestMatch = LUNAR_DATA[i]; } else { break; }
+      }
+      const [bYear, bMonth, bDay] = bestMatch.solar.split('-').map(Number);
+      const bestMatchDate = new Date(bYear, bMonth - 1, bDay);
+      const diffDays = Math.round((targetDate - bestMatchDate) / (1000 * 60 * 60 * 24));
+      return { month: bestMatch.lunarMonth, day: bestMatch.lunarDay + diffDays, isLeap: bestMatch.isLeap };
+    };
+
+    const getLunarDateStr = (solarDay, targetMonth, targetYear) => {
+      const dateObj = new Date(targetYear, targetMonth, solarDay);
+      const lunar = convertSolarToLunar(dateObj);
+      return `음${lunar.isLeap ? '윤' : ''}${lunar.month}.${lunar.day}`;
+    };
+
+    const getLunarFromDateString = (dateStr) => {
+      if (!dateStr) return '';
+      const p = dateStr.split('-');
+      const dateObj = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+      const lunar = convertSolarToLunar(dateObj);
+      return `음력 ${lunar.isLeap ? '윤' : ''}${lunar.month}.${lunar.day}`;
+    };
+
+    const getHolidays = (year) => {
+      const solarHolidays = [
+        { date: `${year}-01-01`, name: '신정', type: 'holiday' },
+        { date: `${year}-03-01`, name: '삼일절', type: 'national' },
+        { date: `${year}-05-05`, name: '어린이날', type: 'holiday' },
+        { date: `${year}-06-06`, name: '현충일', type: 'national' },
+        { date: `${year}-08-15`, name: '광복절', type: 'national' },
+        { date: `${year}-10-03`, name: '개천절', type: 'national' },
+        { date: `${year}-10-09`, name: '한글날', type: 'national' },
+        { date: `${year}-12-25`, name: '성탄절', type: 'holiday' },
+      ];
+      let specialHolidays = [];
+      if (year === 2026) {
+        specialHolidays = [
+          { date: '2026-02-16', name: '설날 연휴', type: 'holiday' },
+          { date: '2026-02-17', name: '설날', type: 'national' },
+          { date: '2026-02-18', name: '설날 연휴', type: 'holiday' },
+          { date: '2026-03-02', name: '대체공휴일', type: 'holiday' },
+          { date: '2026-05-24', name: '부처님오신날', type: 'holiday' },
+          { date: '2026-05-25', name: '대체공휴일', type: 'holiday' },
+          { date: '2026-08-17', name: '대체공휴일', type: 'holiday' },
+          { date: '2026-09-24', name: '추석 연휴', type: 'holiday' },
+          { date: '2026-09-25', name: '추석', type: 'national' },
+          { date: '2026-09-26', name: '추석 연휴', type: 'holiday' },
+          { date: '2026-10-05', name: '대체공휴일', type: 'holiday' },
+        ];
+      } else if (year === 2025) {
+        specialHolidays = [
+          { date: '2025-01-28', name: '설날 연휴', type: 'holiday' },
+          { date: '2025-01-29', name: '설날', type: 'national' },
+          { date: '2025-01-30', name: '설날 연휴', type: 'holiday' },
+          { date: '2025-03-03', name: '대체공휴일', type: 'holiday' },
+          { date: '2025-05-05', name: '부처님오신날', type: 'holiday' },
+          { date: '2025-05-06', name: '대체공휴일', type: 'holiday' },
+          { date: '2025-10-05', name: '추석 연휴', type: 'holiday' },
+          { date: '2025-10-06', name: '추석', type: 'national' },
+          { date: '2025-10-07', name: '추석 연휴', type: 'holiday' },
+          { date: '2025-10-08', name: '대체공휴일', type: 'holiday' },
+        ];
+      }
+      return [...solarHolidays, ...specialHolidays];
+    };
+
+    const generateWeatherData = (day, targetMonth) => {
+      const weatherTypes = ['sunny', 'cloudy', 'rain'];
+      const weatherIndex = (day + targetMonth) % 3;
+      const tideLevel = (day * 2) % 13 + 1;
+      const baseHour = 9;
+      const shift = day * 50;
+      const highTideHour = Math.floor((baseHour * 60 + shift) / 60) % 24;
+      const highTideMin = (baseHour * 60 + shift) % 60;
+      const lowTideHour = (highTideHour + 6) % 24;
+      return {
+        weather: weatherTypes[weatherIndex],
+        tide: `${tideLevel}물`,
+        high: `${highTideHour.toString().padStart(2, '0')}:${highTideMin.toString().padStart(2, '0')}`,
+        low: `${lowTideHour.toString().padStart(2, '0')}:${highTideMin.toString().padStart(2, '0')}`
+      };
+    };
+
+    const formatAmPm = (timeStr) => {
+      if (!timeStr) return '-';
+      const [hour, minute] = timeStr.split(':').map(Number);
+      const period = hour < 12 ? '오전' : '오후';
+      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+      return `${period} ${displayHour}:${minute.toString().padStart(2, '0')}`;
+    };
+
+    const calculateDuration = (start, end) => {
+      if (!start) return '';
+      if (!end || start.getTime() === end.getTime()) return '당일 이용';
+      const diffDays = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24));
+      return `${diffDays}박 ${diffDays + 1}일`;
+    };
+
+    const formatDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    // ===== INITIAL DATA =====
+    const INITIAL_FAMILY_EVENTS = [
+      { id: 1, name: '아버지 생신', startDate: '2026-03-15', endDate: '2026-03-15', note: '저녁 식사 예약' },
+      { id: 2, name: '제주도 가족여행', startDate: '2026-05-20', endDate: '2026-05-23', note: '항공권 예매 완료' },
+      { id: 3, name: '여름 휴가', startDate: '2026-07-28', endDate: '2026-07-31', note: '강원도 펜션' },
+      { id: 4, name: '추석 가족모임', startDate: '2026-09-25', endDate: '2026-09-26', note: '큰집 방문' },
+      { id: 5, name: '결혼기념일', startDate: '2026-10-10', endDate: '2026-10-10', note: '외식' },
+      { id: 6, name: '김장', startDate: '2026-11-21', endDate: '2026-11-22', note: '배추 50포기' },
+    ];
+
+    const today = new Date();
+    const INITIAL_BOOKINGS = [
+      { id: 1, start: new Date(today.getFullYear(), 0, 15), end: new Date(today.getFullYear(), 0, 17), timeStart: '15:00', timeEnd: '11:00', name: '김철수', phone: '010-1234-5678' },
+      { id: 2, start: new Date(today.getFullYear(), 1, 25), end: new Date(today.getFullYear(), 1, 25), timeStart: '10:00', timeEnd: '18:00', name: '이영희', phone: '010-9876-5432' },
+      { id: 3, start: new Date(today.getFullYear(), 2, 10), end: new Date(today.getFullYear(), 2, 12), timeStart: '14:00', timeEnd: '12:00', name: '박지민', phone: '010-1111-2222' },
+      { id: 4, start: new Date(today.getFullYear(), 3, 5), end: new Date(today.getFullYear(), 3, 6), timeStart: '15:00', timeEnd: '11:00', name: '최민수', phone: '010-3333-4444' },
+      { id: 5, start: new Date(today.getFullYear(), 4, 20), end: new Date(today.getFullYear(), 4, 22), timeStart: '15:00', timeEnd: '11:00', name: '정수정', phone: '010-5555-6666' },
+    ];
+
+    // ===== COMPONENTS =====
+
+    // --- Header ---
+    const Header = ({ step, onOpenEventModal, onOpenWeatherModal, onOpenStatusModal }) => {
+      const steps = ['period', 'time', 'form'];
+      return (
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white text-center relative shadow-lg">
+          <div className="flex justify-between items-start mb-2">
+            <h1 className="text-xl font-bold tracking-tight">🏡 공간/펜션 예약</h1>
+            <div className="flex gap-1.5 flex-wrap justify-end">
+              <button onClick={onOpenEventModal} className="bg-pink-500 hover:bg-pink-400 text-white text-[10px] px-2 py-1.5 rounded-full flex items-center gap-1 transition shadow-sm ring-1 ring-pink-400">
+                <CalendarHeart className="w-3 h-3" /> 가족 행사
+              </button>
+              <button onClick={onOpenWeatherModal} className="bg-cyan-500 hover:bg-cyan-400 text-white text-[10px] px-2 py-1.5 rounded-full flex items-center gap-1 transition shadow-sm ring-1 ring-cyan-400">
+                <Waves className="w-3 h-3" /> 바다 날씨
+              </button>
+              <button onClick={onOpenStatusModal} className="bg-blue-800 hover:bg-blue-900 text-white text-[10px] px-2 py-1.5 rounded-full flex items-center gap-1 transition shadow-sm">
+                <ClipboardList className="w-3 h-3" /> 예약 대장
+              </button>
+            </div>
+          </div>
+          <p className="text-blue-100 text-sm mt-1">
+            {step === 'date' ? '날짜를 선택하여 예약을 시작하세요.' :
+              step === 'period' ? '예약하실 기간을 확인해주세요.' :
+                step === 'time' ? '체크인/체크아웃 시간을 선택해주세요.' :
+                  step === 'form' ? '예약자 정보를 입력해주세요.' : '예약이 완료되었습니다!'}
+          </p>
+          <div className="flex justify-center mt-4 space-x-2">
+            {steps.map((s, idx) => (
+              <div key={s} className={`h-1.5 w-8 rounded-full transition-colors ${['period', 'time', 'form', 'success'].indexOf(step) >= idx ? 'bg-white' : 'bg-blue-800'
+                }`} />
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // --- SuccessView ---
+    const SuccessView = ({ onReset }) => (
+      <div className="text-center py-10 animate-scaleIn flex flex-col items-center justify-center h-full px-6">
+        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle2 className="w-12 h-12 text-green-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">예약 신청 완료!</h2>
+        <p className="text-gray-500 mb-8">예약이 정상적으로 접수되었습니다.<br />확인 후 문자로 안내해 드리겠습니다.</p>
+        <button onClick={onReset} className="w-full max-w-xs border border-gray-300 text-gray-700 p-3 rounded-xl font-bold hover:bg-gray-50 transition">
+          첫 화면으로
+        </button>
+      </div>
+    );
+
+    // --- ConfirmModal ---
+    const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, isDanger = false }) => {
+      if (!isOpen) return null;
+      return (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 animate-fadeIn">
+          <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl p-6 text-center">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${isDanger ? 'bg-red-100' : 'bg-blue-100'}`}>
+              <Trash2 className={`w-6 h-6 ${isDanger ? 'text-red-500' : 'text-blue-500'}`} />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+            <p className="text-gray-500 text-sm mb-6 whitespace-pre-line">{message}</p>
+            <div className="flex gap-3">
+              <button onClick={onCancel} className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">취소</button>
+              <button onClick={onConfirm} className={`flex-1 py-3 text-white font-bold rounded-xl transition shadow-md ${isDanger ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}>삭제하기</button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // --- EventModal ---
+    const EventModal = ({ isOpen, onClose, events }) => {
+      if (!isOpen) return null;
+      return (
+        <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/50 animate-fadeIn" onClick={onClose}>
+          <div className="bg-white w-full max-h-[80%] rounded-t-2xl shadow-xl animate-slideUp overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
+              <h3 className="text-lg font-bold text-gray-900">📅 가족 행사</h3>
+              <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full"><X className="w-5 h-5 text-gray-500" /></button>
+            </div>
+            <div className="p-4 space-y-3">
+              {events.map(ev => (
+                <div key={ev.id} className="bg-pink-50 border border-pink-100 rounded-xl p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-gray-900">{ev.name}</h4>
+                      <p className="text-sm text-gray-500 mt-1">{ev.startDate}{ev.startDate !== ev.endDate ? ` ~ ${ev.endDate}` : ''}</p>
+                      <p className="text-xs text-pink-500 mt-1">{getLunarFromDateString(ev.startDate)}</p>
+                    </div>
+                    {ev.note && <span className="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">{ev.note}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // --- WeatherModal ---
+    const WeatherModal = ({ isOpen, onClose, targetMonth, targetYear }) => {
+      if (!isOpen) return null;
+      const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+      const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+      const WeatherIcon = ({ type }) => {
+        if (type === 'sunny') return <Sun className="w-5 h-5 text-amber-500" />;
+        if (type === 'cloudy') return <Cloud className="w-5 h-5 text-gray-400" />;
+        return <CloudRain className="w-5 h-5 text-blue-400" />;
+      };
+      return (
+        <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/50 animate-fadeIn" onClick={onClose}>
+          <div className="bg-white w-full max-h-[80%] rounded-t-2xl shadow-xl animate-slideUp overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
+              <h3 className="text-lg font-bold text-gray-900">🌊 {targetYear}년 {targetMonth + 1}월 바다 날씨</h3>
+              <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full"><X className="w-5 h-5 text-gray-500" /></button>
+            </div>
+            <div className="p-4">
+              <div className="grid grid-cols-1 gap-2">
+                {days.map(day => {
+                  const w = generateWeatherData(day, targetMonth);
+                  return (
+                    <div key={day} className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2 text-sm">
+                      <span className="font-bold text-gray-700 w-8">{day}일</span>
+                      <WeatherIcon type={w.weather} />
+                      <span className="text-cyan-600 font-medium">{w.tide}</span>
+                      <span className="text-gray-400 text-xs">만조 {w.high}</span>
+                      <span className="text-gray-400 text-xs">간조 {w.low}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // --- StatusModal ---
+    const StatusModal = ({ isOpen, onClose, bookings, onDelete }) => {
+      const [confirmTarget, setConfirmTarget] = useState(null);
+      if (!isOpen) return null;
+      return (
+        <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/50 animate-fadeIn" onClick={onClose}>
+          <div className="bg-white w-full max-h-[80%] rounded-t-2xl shadow-xl animate-slideUp overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
+              <h3 className="text-lg font-bold text-gray-900">📋 예약 대장</h3>
+              <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full"><X className="w-5 h-5 text-gray-500" /></button>
+            </div>
+            <div className="p-4 space-y-3">
+              {bookings.length === 0 ? (
+                <p className="text-center text-gray-400 py-8">등록된 예약이 없습니다.</p>
+              ) : bookings.map(b => (
+                <div key={b.id} className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-gray-900 flex items-center gap-2">
+                        <User className="w-4 h-4 text-blue-500" /> {b.name}
+                      </h4>
+                      <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                        <Phone className="w-3 h-3" /> {b.phone}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {formatDate(b.start)}{b.start.getTime() !== b.end.getTime() ? ` ~ ${formatDate(b.end)}` : ''}
+                        <span className="text-blue-500 ml-1">({calculateDuration(b.start, b.end)})</span>
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {formatAmPm(b.timeStart)} ~ {formatAmPm(b.timeEnd)}
+                      </p>
+                    </div>
+                    <button onClick={() => setConfirmTarget(b.id)} className="text-red-400 hover:text-red-600 p-1">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <ConfirmModal
+              isOpen={confirmTarget !== null}
+              title="예약 삭제"
+              message="이 예약을 삭제하시겠습니까?"
+              isDanger={true}
+              onConfirm={() => { onDelete(confirmTarget); setConfirmTarget(null); }}
+              onCancel={() => setConfirmTarget(null)}
+            />
+          </div>
+        </div>
+      );
+    };
+
+    // --- MonthCalendar ---
+    const MonthCalendar = ({ targetMonth, targetYear, onPrevMonth, onNextMonth, onSelectDate, selectedStart, selectedEnd, bookings, familyEvents }) => {
+      const holidays = useMemo(() => getHolidays(targetYear), [targetYear]);
+      const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
+      const firstDayOfMonth = new Date(targetYear, targetMonth, 1).getDay();
+      const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+      const todayStr = formatDate(new Date());
+
+      const isHoliday = (day) => {
+        const dateStr = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        return holidays.find(h => h.date === dateStr);
+      };
+
+      const isBooked = (day) => {
+        const d = new Date(targetYear, targetMonth, day);
+        return bookings.some(b => d >= b.start && d <= b.end);
+      };
+
+      const hasFamilyEvent = (day) => {
+        const dateStr = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        return familyEvents.find(e => dateStr >= e.startDate && dateStr <= e.endDate);
+      };
+
+      const isInSelectedRange = (day) => {
+        if (!selectedStart) return false;
+        const d = new Date(targetYear, targetMonth, day);
+        if (!selectedEnd) return d.getTime() === selectedStart.getTime();
+        return d >= selectedStart && d <= selectedEnd;
+      };
+
+      const isSelectedStart_ = (day) => selectedStart && new Date(targetYear, targetMonth, day).getTime() === selectedStart.getTime();
+      const isSelectedEnd_ = (day) => selectedEnd && new Date(targetYear, targetMonth, day).getTime() === selectedEnd.getTime();
+
+      return (
+        <div className="animate-fadeIn">
+          {/* Month Navigation */}
+          <div className="flex justify-between items-center px-4 py-3">
+            <button onClick={onPrevMonth} className="p-2 hover:bg-gray-100 rounded-full transition"><ChevronLeft className="w-5 h-5 text-gray-600" /></button>
+            <h2 className="text-lg font-bold text-gray-800">{targetYear}년 {targetMonth + 1}월</h2>
+            <button onClick={onNextMonth} className="p-2 hover:bg-gray-100 rounded-full transition"><ChevronRight className="w-5 h-5 text-gray-600" /></button>
+          </div>
+
+          {/* Day Headers */}
+          <div className="grid grid-cols-7 text-center text-xs font-medium pb-1 px-2">
+            {daysOfWeek.map((d, i) => (
+              <div key={d} className={`py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>{d}</div>
+            ))}
+          </div>
+
+          {/* Day Grid */}
+          <div className="grid grid-cols-7 text-center px-2 pb-4 gap-y-1">
+            {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`} />)}
+            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+              const dayOfWeek = new Date(targetYear, targetMonth, day).getDay();
+              const dateStr = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const holiday = isHoliday(day);
+              const booked = isBooked(day);
+              const event = hasFamilyEvent(day);
+              const inRange = isInSelectedRange(day);
+              const isStart = isSelectedStart_(day);
+              const isEnd = isSelectedEnd_(day);
+              const isToday = dateStr === todayStr;
+              const lunar = getLunarDateStr(day, targetMonth, targetYear);
+
+              return (
+                <button
+                  key={day}
+                  onClick={() => onSelectDate(new Date(targetYear, targetMonth, day))}
+                  className={`relative flex flex-col items-center py-1 rounded-xl transition-all text-sm min-h-[52px] ${inRange ? 'bg-blue-500 text-white shadow-md' :
+                    isToday ? 'ring-2 ring-blue-400 bg-blue-50' :
+                      'hover:bg-gray-50'
+                    }`}
+                >
+                  <span className={`font-semibold ${inRange ? 'text-white' :
+                    holiday || dayOfWeek === 0 ? 'text-red-500' :
+                      dayOfWeek === 6 ? 'text-blue-500' : 'text-gray-800'
+                    }`}>{day}</span>
+                  <span className={`text-[9px] mt-0.5 ${inRange ? 'text-blue-100' : 'text-gray-400'}`}>{lunar}</span>
+                  {/* Indicators */}
+                  <div className="flex gap-0.5 mt-0.5">
+                    {holiday && <div className={`w-1 h-1 rounded-full ${inRange ? 'bg-white' : 'bg-red-400'}`} />}
+                    {booked && <div className={`w-1 h-1 rounded-full ${inRange ? 'bg-white' : 'bg-green-400'}`} />}
+                    {event && <div className={`w-1 h-1 rounded-full ${inRange ? 'bg-white' : 'bg-pink-400'}`} />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="flex justify-center gap-4 text-xs text-gray-400 pb-4">
+            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-400" />공휴일</span>
+            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-400" />예약</span>
+            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-pink-400" />가족 행사</span>
+          </div>
+        </div>
+      );
+    };
+
+    // --- PeriodSelector ---
+    const PeriodSelector = ({ selectedStart, selectedEnd, onBack, onNext }) => (
+      <div className="p-6 animate-slideUp">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">📆 예약 기간 확인</h3>
+        <div className="bg-blue-50 rounded-2xl p-5 space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500 text-sm">체크인</span>
+            <span className="font-bold text-gray-900">{selectedStart ? formatDate(selectedStart) : '-'}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500 text-sm">체크아웃</span>
+            <span className="font-bold text-gray-900">{selectedEnd ? formatDate(selectedEnd) : formatDate(selectedStart)}</span>
+          </div>
+          <hr className="border-blue-100" />
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500 text-sm">기간</span>
+            <span className="font-bold text-blue-600">{calculateDuration(selectedStart, selectedEnd)}</span>
+          </div>
+        </div>
+        <div className="flex gap-3 mt-6">
+          <button onClick={onBack} className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">뒤로</button>
+          <button onClick={onNext} className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-md">다음</button>
+        </div>
+      </div>
+    );
+
+    // --- TimeSelector ---
+    const TimeSelector = ({ timeStart, timeEnd, onTimeStartChange, onTimeEndChange, onBack, onNext }) => {
+      const timeOptions = [];
+      for (let h = 6; h <= 22; h++) {
+        timeOptions.push(`${String(h).padStart(2, '0')}:00`);
+        if (h < 22) timeOptions.push(`${String(h).padStart(2, '0')}:30`);
+      }
+      return (
+        <div className="p-6 animate-slideUp">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">⏰ 시간 선택</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-500 mb-1 block">체크인 시간</label>
+              <select value={timeStart} onChange={e => onTimeStartChange(e.target.value)} className="w-full border border-gray-200 rounded-xl p-3 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                {timeOptions.map(t => <option key={t} value={t}>{formatAmPm(t)}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm text-gray-500 mb-1 block">체크아웃 시간</label>
+              <select value={timeEnd} onChange={e => onTimeEndChange(e.target.value)} className="w-full border border-gray-200 rounded-xl p-3 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                {timeOptions.map(t => <option key={t} value={t}>{formatAmPm(t)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex gap-3 mt-6">
+            <button onClick={onBack} className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">뒤로</button>
+            <button onClick={onNext} className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-md">다음</button>
+          </div>
+        </div>
+      );
+    };
+
+    // --- ReservationForm ---
+    const ReservationForm = ({ name, phone, onNameChange, onPhoneChange, onBack, onSubmit }) => (
+      <div className="p-6 animate-slideUp">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">📝 예약자 정보</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm text-gray-500 mb-1 block flex items-center gap-1"><User className="w-4 h-4" /> 이름</label>
+            <input type="text" value={name} onChange={e => onNameChange(e.target.value)} placeholder="홍길동" className="w-full border border-gray-200 rounded-xl p-3 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none" />
+          </div>
+          <div>
+            <label className="text-sm text-gray-500 mb-1 block flex items-center gap-1"><Phone className="w-4 h-4" /> 연락처</label>
+            <input type="tel" value={phone} onChange={e => onPhoneChange(e.target.value)} placeholder="010-0000-0000" className="w-full border border-gray-200 rounded-xl p-3 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none" />
+          </div>
+        </div>
+        <div className="flex gap-3 mt-6">
+          <button onClick={onBack} className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">뒤로</button>
+          <button onClick={onSubmit} disabled={!name || !phone} className={`flex-1 py-3 text-white font-bold rounded-xl transition shadow-md ${name && phone ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'}`}>예약 신청</button>
+        </div>
+      </div>
+    );
+
+    // ===== MAIN APP =====
+    const App = () => {
+      const [step, setStep] = useState('date'); // date, period, time, form, success
+      const [targetMonth, setTargetMonth] = useState(today.getMonth());
+      const [targetYear, setTargetYear] = useState(today.getFullYear());
+      const [selectedStart, setSelectedStart] = useState(null);
+      const [selectedEnd, setSelectedEnd] = useState(null);
+      const [timeStart, setTimeStart] = useState('15:00');
+      const [timeEnd, setTimeEnd] = useState('11:00');
+      const [guestName, setGuestName] = useState('');
+      const [guestPhone, setGuestPhone] = useState('');
+
+      // Load bookings from localStorage
+      const [bookings, setBookings] = useState(() => {
+        try {
+          const saved = localStorage.getItem('pension_bookings');
+          if (saved) {
+            return JSON.parse(saved).map(b => ({
+              ...b,
+              start: new Date(b.start),
+              end: new Date(b.end)
+            }));
+          }
+        } catch (e) {
+          console.error("Failed to load bookings", e);
+        }
+        return INITIAL_BOOKINGS;
+      });
+
+      // Save bookings to localStorage whenever they change
+      useEffect(() => {
+        localStorage.setItem('pension_bookings', JSON.stringify(bookings));
+      }, [bookings]);
+
+      const [familyEvents] = useState(INITIAL_FAMILY_EVENTS);
+
+      // Modals
+      const [showEventModal, setShowEventModal] = useState(false);
+      const [showWeatherModal, setShowWeatherModal] = useState(false);
+      const [showStatusModal, setShowStatusModal] = useState(false);
+
+      const handlePrevMonth = () => {
+        if (targetMonth === 0) { setTargetMonth(11); setTargetYear(y => y - 1); }
+        else setTargetMonth(m => m - 1);
+      };
+      const handleNextMonth = () => {
+        if (targetMonth === 11) { setTargetMonth(0); setTargetYear(y => y + 1); }
+        else setTargetMonth(m => m + 1);
+      };
+
+      const handleSelectDate = (date) => {
+        if (!selectedStart || (selectedStart && selectedEnd)) {
+          setSelectedStart(date);
+          setSelectedEnd(null);
+        } else {
+          if (date < selectedStart) {
+            setSelectedEnd(selectedStart);
+            setSelectedStart(date);
+          } else {
+            setSelectedEnd(date);
+          }
+          setStep('period');
+        }
+      };
+
+      const handleSubmit = () => {
+        const newBooking = {
+          id: Date.now(),
+          start: selectedStart,
+          end: selectedEnd || selectedStart,
+          timeStart,
+          timeEnd,
+          name: guestName,
+          phone: guestPhone,
+        };
+        setBookings(prev => [...prev, newBooking]);
+        setStep('success');
+      };
+
+      const handleReset = () => {
+        setStep('date');
+        setSelectedStart(null);
+        setSelectedEnd(null);
+        setTimeStart('15:00');
+        setTimeEnd('11:00');
+        setGuestName('');
+        setGuestPhone('');
+      };
+
+      const handleDeleteBooking = (id) => {
+        setBookings(prev => prev.filter(b => b.id !== id));
+      };
+
+      return (
+        <div className="max-w-md mx-auto bg-white min-h-screen relative shadow-2xl">
+          <Header
+            step={step}
+            onOpenEventModal={() => setShowEventModal(true)}
+            onOpenWeatherModal={() => setShowWeatherModal(true)}
+            onOpenStatusModal={() => setShowStatusModal(true)}
+          />
+
+          <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 140px)' }}>
+            {step === 'date' && (
+              <MonthCalendar
+                targetMonth={targetMonth}
+                targetYear={targetYear}
+                onPrevMonth={handlePrevMonth}
+                onNextMonth={handleNextMonth}
+                onSelectDate={handleSelectDate}
+                selectedStart={selectedStart}
+                selectedEnd={selectedEnd}
+                bookings={bookings}
+                familyEvents={familyEvents}
+              />
+            )}
+
+            {step === 'period' && (
+              <PeriodSelector
+                selectedStart={selectedStart}
+                selectedEnd={selectedEnd}
+                onBack={() => setStep('date')}
+                onNext={() => setStep('time')}
+              />
+            )}
+
+            {step === 'time' && (
+              <TimeSelector
+                timeStart={timeStart}
+                timeEnd={timeEnd}
+                onTimeStartChange={setTimeStart}
+                onTimeEndChange={setTimeEnd}
+                onBack={() => setStep('period')}
+                onNext={() => setStep('form')}
+              />
+            )}
+
+            {step === 'form' && (
+              <ReservationForm
+                name={guestName}
+                phone={guestPhone}
+                onNameChange={setGuestName}
+                onPhoneChange={setGuestPhone}
+                onBack={() => setStep('time')}
+                onSubmit={handleSubmit}
+              />
+            )}
+
+            {step === 'success' && <SuccessView onReset={handleReset} />}
+          </div>
+
+          {/* Modals */}
+          <EventModal isOpen={showEventModal} onClose={() => setShowEventModal(false)} events={familyEvents} />
+          <WeatherModal isOpen={showWeatherModal} onClose={() => setShowWeatherModal(false)} targetMonth={targetMonth} targetYear={targetYear} />
+          <StatusModal isOpen={showStatusModal} onClose={() => setShowStatusModal(false)} bookings={bookings} onDelete={handleDeleteBooking} />
+        </div>
+      );
+    };
+
+    // ===== RENDER =====
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+
+</html>
